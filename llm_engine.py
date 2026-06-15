@@ -7,7 +7,7 @@ class LLMEngine:
     """
     Module 2: The Intelligence Layer (llm_engine.py)
     Manages connections to local Ollama servers (Llama3/DeepSeek-R1) and parses reasoning thinking blocks.
-    Features a zero-downtime, local deterministic cognitive rule fallback engine for pitch robustness.
+    Features a zero-downtime, local deterministic cognitive rule fallback engine for system robustness.
     """
     def __init__(self, api_url=OLLAMA_API_URL, model_name=OLLAMA_MODEL):
         self.api_url = api_url

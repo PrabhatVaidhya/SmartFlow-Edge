@@ -975,7 +975,7 @@ def apply_demo_preset(preset_name: str):
         st.session_state.ai_response["mitigation_action"] = "EMERGENCY HALT"
         st.session_state.ai_response["gcode_command"] = "M112; M104 S0; M140 S0"
 
-    log_event("info", f"Pitch demo preset loaded: {preset_name.title()}")
+    log_event("info", f"Demo preset loaded: {preset_name.title()}")
     st.experimental_rerun()
 
 
@@ -1325,7 +1325,7 @@ with act_col1:
             st.rerun()
 
 with act_col2:
-    if st.button("🎯 ONE-CLICK TRIGGER CR", key="btn_pitch_preset", use_container_width=True, help="Apply critical defect demo preset"):
+    if st.button("🎯 ONE-CLICK TRIGGER CR", key="btn_critical_preset", use_container_width=True, help="Apply critical defect demo preset"):
         apply_demo_preset("critical")
         st.rerun()
 
@@ -1505,9 +1505,9 @@ with col3:
     hmc_placeholder = st.empty()
     federated_mesh_placeholder = st.empty()
     
-    # Place AI Reasoning and Judge Summary at the bottom of the right column
+    # Place AI Reasoning and Executive Summary at the bottom of the right column
     ai_card_placeholder = st.empty()
-    judge_summary_placeholder = st.empty()
+    exec_summary_placeholder = st.empty()
 
 # ==============================================================================
 # TIER 3: LOGISTICS & ANALYTICS (Widescreen Spanning below columns)
@@ -3280,13 +3280,13 @@ while True:
     fleet_energy_savings_inr = fleet_energy_saved_kwh * energy_kwh_cost # ₹10,080
     fleet_total_savings_inr = fleet_material_savings_inr + fleet_energy_savings_inr # ₹1,18,080
 
-    # Judge Summary panel
+    # Executive Summary panel
     safety_grade = "A" if st.session_state.last_severity == "SAFE" else "B" if st.session_state.last_severity == "WARNING" else "C"
     safety_color = "#10b981" if safety_grade == "A" else "#f59e0b" if safety_grade == "B" else "#ef4444"
-    judge_html = f"""
+    exec_summary_html = f"""
     <div class="industrial-panel">
         <div class="card-title" style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-            <span>🧾 Judge Summary</span>
+            <span>🧾 Executive Summary</span>
             <span style="font-size:0.75rem; color:{safety_color}; font-weight:bold;">Safety Grade: {safety_grade}</span>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
@@ -3312,7 +3312,7 @@ while True:
         </div>
     </div>
     """
-    judge_summary_placeholder.markdown(judge_html, unsafe_allow_html=True)
+    exec_summary_placeholder.markdown(exec_summary_html, unsafe_allow_html=True)
     
     # Flash warning block if anomaly is prevented (in HALTED state)
     roi_flash_html = ""
