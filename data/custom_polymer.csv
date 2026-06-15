@@ -1,0 +1,3 @@
+name,target_temp,bed_temp,k,Tg,max_flow
+PETG Carbon-Fibre,240,85,0.21,80,11.5
+Polycarbonate Ultra,285,120,0.33,145,18.0

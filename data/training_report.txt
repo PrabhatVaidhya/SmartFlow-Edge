@@ -1,0 +1,26 @@
+SmartFlow Edge -- Real-World Combined Training Report
+Version  : 4.0-realworld-combined
+Trained  : 2026-06-02 15:54:35
+Sources  : ['synthetic-smartflow-1573', 'huggingface-javiai-failures-3D-print', 'huggingface-keremberke-3d-printing', 'huggingface-Francesco215-3d-printing-defects', 'huggingface-pcuenq-3d-printing']
+
+Dataset  : 1646 total (786 nominal + 860 defect)
+
+Accuracy  : 99.03%
+Precision : 98.62%
+Recall    : 99.53%
+F1-Score  : 99.07%
+ROC-AUC   : 0.9999
+CV F1     : 98.84% +-0.44%
+
+Confusion Matrix:
+  TN=194  FP=3
+  FN=1  TP=214
+
+              precision    recall  f1-score   support
+
+     Nominal       0.99      0.98      0.99       197
+      Defect       0.99      1.00      0.99       215
+
+    accuracy                           0.99       412
+   macro avg       0.99      0.99      0.99       412
+weighted avg       0.99      0.99      0.99       412

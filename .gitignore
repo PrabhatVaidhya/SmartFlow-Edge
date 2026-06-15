@@ -1,0 +1,23 @@
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pkl
+*.zip
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+
+# OS/IDE configurations
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Local Backups & Restores
+*.bak
+*.restored
+app.py.bak
+app.py.restored

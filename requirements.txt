@@ -1,0 +1,8 @@
+numpy==2.4.3
+opencv-python==4.13.0.92
+streamlit==1.57.0
+requests==2.32.3
+scikit-learn==1.8.0
+psutil==7.2.2
+yt-dlp==2026.3.17
+pyserial==3.5
