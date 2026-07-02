@@ -141,6 +141,9 @@ class VisionGateway:
                 elif self.anomaly_mode == "Under-Extrusion / Nozzle Clog":
                     if int(self.sim_layer) % 2 == 0:
                         self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, True))
+                elif self.anomaly_mode == "Detached Print / Bed Separation":
+                    if int(self.sim_layer) % 2 == 0:
+                        self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, False))
                 else: # Spaghetti
                     if int(self.sim_layer) % 2 == 0:
                         self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, False))
@@ -157,6 +160,11 @@ class VisionGateway:
                 tilt = int(self.defect_severity * 15 * layer_depth_factor)
                 cv2.line(frame, (px - pw // 2, py - tilt), (px, py), (0, 180, 80), 2)
                 cv2.line(frame, (px, py), (px + pw // 2, py - tilt), (0, 180, 80), 2)
+            elif self.defect_active and self.anomaly_mode == "Detached Print / Bed Separation":
+                # Shift and tilt the entire cylinder to simulate it being dragged by the nozzle
+                drag_offset = int(self.defect_severity * (self.sim_nozzle_x - self.sim_pillar_x) * 0.7)
+                tilt = int(self.defect_severity * 15)
+                cv2.line(frame, (px - pw // 2 + drag_offset - tilt, py - tilt), (px + pw // 2 + drag_offset + tilt, py + tilt), (0, 180, 80), 2)
             elif is_under:
                 # Under-extruded layers are drawn thin and dashed
                 for seg_x in range(px - pw // 2 + offset_x, px + pw // 2 + offset_x, 8):
@@ -354,6 +362,9 @@ class VisionGateway:
             if self.defect_active and self.anomaly_mode == "Under-Extrusion / Nozzle Clog":
                 deviation_pct = self.defect_severity * 65.0
                 complexity_score = self.defect_severity * 45.0
+            elif self.defect_active and self.anomaly_mode == "Detached Print / Bed Separation":
+                deviation_pct = self.defect_severity * 95.0
+                complexity_score = self.defect_severity * 30.0
             # --------------------------------------------------------
             
             # --- Active ML SVM Classifier Inference ---
