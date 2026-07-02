@@ -1550,35 +1550,83 @@ with st.expander("🏆 VIEW SYSTEM DEFENSIBILITY & METROLOGICAL PLAYBOOK", expan
                 val = 190.0 * np.exp(-0.45 * (s - 6)) + 4.2 + np.random.normal(0, 0.8)
                 comp_err.append(max(2.1, val))
                 
-        import matplotlib.pyplot as plt
-        import io
+        # Dimensions of the SVG canvas
+        w, h = 600, 240
+        padding_left, padding_right = 50, 20
+        padding_top, padding_bottom = 20, 30
         
-        fig, ax = plt.subplots(figsize=(6, 3.8), facecolor='#13131a')
-        ax.set_facecolor('#13131a')
-        ax.plot(steps, baseline_err, label="Baseline Tracking Error (No-Comp)", color="#ef4444", linewidth=1.5)
-        ax.plot(steps, comp_err, label="SmartFlow Closed-Loop (Compensated)", color="#10b981", linewidth=2)
-        ax.set_xlabel("Control Cycle", color="#8b8fa8", fontsize=8)
-        ax.set_ylabel("Error (\u00b5m)", color="#8b8fa8", fontsize=8)
-        ax.tick_params(colors='#8b8fa8', labelsize=7)
-        ax.grid(True, color="#1f1f30", linestyle="--", linewidth=0.5)
+        chart_w = w - padding_left - padding_right
+        chart_h = h - padding_top - padding_bottom
         
-        # Legend with matching colors
-        leg = ax.legend(facecolor='#13131a', edgecolor='#1f1f30', fontsize=7)
-        for text in leg.get_texts():
-            text.set_color('#e8eaf0')
+        max_val = 220.0
+        min_val = 0.0
+        
+        def scale_x(s):
+            return padding_left + ((s - 1) / 39) * chart_w
             
-        # Remove top/right spines
-        for spine in ['top', 'right']:
-            ax.spines[spine].set_visible(False)
-        ax.spines['left'].set_color('#1f1f30')
-        ax.spines['bottom'].set_color('#1f1f30')
+        def scale_y(v):
+            return padding_top + chart_h - ((v - min_val) / (max_val - min_val)) * chart_h
+            
+        # Generate background grid lines (horizontal Y lines)
+        grid_html = ""
+        for y_val in [0, 50, 100, 150, 200]:
+            y_pos = scale_y(y_val)
+            grid_html += f'<line x1="{padding_left}" y1="{y_pos}" x2="{w - padding_right}" y2="{y_pos}" stroke="#1f1f30" stroke-width="1" stroke-dasharray="3,3" />'
+            grid_html += f'<text x="{padding_left - 8}" y="{y_pos + 4}" fill="#8b8fa8" font-family="\'JetBrains Mono\', monospace" font-size="8" text-anchor="end">{int(y_val)}</text>'
+            
+        # Generate step labels on X axis
+        for x_step in [1, 10, 20, 30, 40]:
+            x_pos = scale_x(x_step)
+            grid_html += f'<line x1="{x_pos}" y1="{padding_top}" x2="{x_pos}" y2="{padding_top + chart_h}" stroke="#1f1f30" stroke-width="1" stroke-dasharray="3,3" />'
+            grid_html += f'<text x="{x_pos}" y="{padding_top + chart_h + 14}" fill="#8b8fa8" font-family="\'JetBrains Mono\', monospace" font-size="8" text-anchor="middle">{x_step}</text>'
+            
+        # Generate points for baseline path
+        base_points = []
+        for s, v in zip(steps, baseline_err):
+            base_points.append(f"{scale_x(s)},{scale_y(v)}")
+        base_path = " ".join(base_points)
         
-        # Save to buffer and display via st.image
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", dpi=150)
-        buf.seek(0)
-        st.image(buf, use_container_width=True)
-        plt.close(fig)
+        # Generate points for compensated path
+        comp_points = []
+        for s, v in zip(steps, comp_err):
+            comp_points.append(f"{scale_x(s)},{scale_y(v)}")
+        comp_path = " ".join(comp_points)
+        
+        legend_html = """
+        <div style="display:flex; justify-content:flex-start; gap:16px; margin-bottom:8px; font-family:'Inter', sans-serif; font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+            <div style="display:flex; align-items:center; gap:6px; color:#ffffff;">
+                <span style="display:inline-block; width:12px; height:3px; background:#ef4444; border-radius:2px;"></span>
+                <span style="color:#ef4444;">Baseline (No-Comp)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; color:#ffffff;">
+                <span style="display:inline-block; width:12px; height:3px; background:#10b981; border-radius:2px;"></span>
+                <span style="color:#10b981;">SmartFlow (Compensated)</span>
+            </div>
+        </div>
+        """
+        
+        svg_html = f"""
+        {legend_html}
+        <svg width="100%" height="215" viewBox="0 0 {w} {h}" style="background:#13131a; border:1px solid #1f1f30; border-radius:6px; overflow:hidden;">
+            <!-- Grid & Labels -->
+            {grid_html}
+            
+            <!-- Axes -->
+            <line x1="{padding_left}" y1="{padding_top}" x2="{padding_left}" y2="{padding_top + chart_h}" stroke="#1f1f30" stroke-width="1.5" />
+            <line x1="{padding_left}" y1="{padding_top + chart_h}" x2="{w - padding_right}" y2="{padding_top + chart_h}" stroke="#1f1f30" stroke-width="1.5" />
+            
+            <!-- Baseline Error Path (Red line) -->
+            <polyline fill="none" stroke="#ef4444" stroke-width="2" points="{base_path}" />
+            
+            <!-- Compensated Error Path (Green line) -->
+            <polyline fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="{comp_path}" />
+            
+            <!-- Axis title -->
+            <text x="{w - 24}" y="{padding_top + chart_h - 6}" fill="#555870" font-family="\'JetBrains Mono\', monospace" font-size="7.5" font-weight="bold" text-anchor="end">CYCLE</text>
+            <text x="{padding_left + 12}" y="{padding_top + 8}" fill="#555870" font-family="\'JetBrains Mono\', monospace" font-size="7.5" font-weight="bold" transform="rotate(90, {padding_left + 12}, {padding_top + 8})" text-anchor="start">ERROR (&micro;m)</text>
+        </svg>
+        """
+        st.markdown(svg_html, unsafe_allow_html=True)
         
     with col_video:
         st.markdown("<h5 style='font-family:\"Inter\", sans-serif; font-size:0.85rem; color:#ffffff; font-weight:bold; margin-top:8px; margin-bottom:4px;'>\ud83c\udfa5 EDGE-VISION DIAGNOSTIC VIDEO FEED</h5>", unsafe_allow_html=True)
