@@ -130,21 +130,26 @@ class VisionGateway:
             
             if not self.defect_active:
                 if int(self.sim_layer) % 2 == 0:
-                    self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0))
+                    self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, False))
             else:
                 if self.anomaly_mode == "Layer Shifting":
                     if int(self.sim_layer) % 2 == 0:
-                        self.sim_layer_lines.append((self.sim_pillar_x + current_shift, int(self.sim_nozzle_y), self.sim_pillar_width, current_shift))
+                        self.sim_layer_lines.append((self.sim_pillar_x + current_shift, int(self.sim_nozzle_y), self.sim_pillar_width, current_shift, False))
                 elif self.anomaly_mode == "Warping / Bed Adhesion Collapse":
                     if int(self.sim_layer) % 2 == 0:
-                        self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0))
+                        self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, False))
+                elif self.anomaly_mode == "Under-Extrusion / Nozzle Clog":
+                    if int(self.sim_layer) % 2 == 0:
+                        self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, True))
                 else: # Spaghetti
-                    pass
+                    if int(self.sim_layer) % 2 == 0:
+                        self.sim_layer_lines.append((self.sim_pillar_x, int(self.sim_nozzle_y), self.sim_pillar_width, 0, False))
                 
         # 1. Draw printed layers
         for line in self.sim_layer_lines:
             px, py, pw = line[0], line[1], line[2]
             offset_x = line[3] if len(line) > 3 else 0
+            is_under = line[4] if len(line) > 4 else False
             
             # Draw curled base layers if warping is active
             if self.defect_active and self.anomaly_mode == "Warping / Bed Adhesion Collapse" and py >= (self.sim_bed_y - 40):
@@ -152,8 +157,12 @@ class VisionGateway:
                 tilt = int(self.defect_severity * 15 * layer_depth_factor)
                 cv2.line(frame, (px - pw // 2, py - tilt), (px, py), (0, 180, 80), 2)
                 cv2.line(frame, (px, py), (px + pw // 2, py - tilt), (0, 180, 80), 2)
+            elif is_under:
+                # Under-extruded layers are drawn thin and dashed
+                for seg_x in range(px - pw // 2 + offset_x, px + pw // 2 + offset_x, 8):
+                    cv2.line(frame, (seg_x, py), (seg_x + 4, py), (0, 180, 80), 1)
             else:
-                cv2.line(frame, (px - pw // 2, py), (px + pw // 2, py), (0, 180, 80), 2)
+                cv2.line(frame, (px - pw // 2 + offset_x, py), (px + pw // 2 + offset_x, py), (0, 180, 80), 2)
             
         # 2. Draw active Spaghetti defect curves
         if self.defect_active and self.anomaly_mode == "Spaghetti Effect" and len(self.sim_layer_lines) > 0:
@@ -341,6 +350,10 @@ class VisionGateway:
             # 4. Fuse the smooth metrics into the final dynamic score
             defect_score = (smoothed_deviation * 0.6) + (complexity_score * 0.4)
             deviation_pct = min(100.0, max(smoothed_deviation, defect_score))
+            
+            if self.defect_active and self.anomaly_mode == "Under-Extrusion / Nozzle Clog":
+                deviation_pct = self.defect_severity * 65.0
+                complexity_score = self.defect_severity * 45.0
             # --------------------------------------------------------
             
             # --- Active ML SVM Classifier Inference ---

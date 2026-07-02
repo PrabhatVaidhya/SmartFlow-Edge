@@ -145,12 +145,25 @@ class LLMEngine:
             mitigation_gcode = "M104 S205" # Bump hotend to 200C - 205C to lower viscosity
             
         # Compile final fallback assessments
+        anomaly_mode = telemetry.get("anomaly_mode", "Spaghetti Effect")
         if severity == "CRITICAL":
-            assessment = f"Critical spaghetti failure detected (Detected Score: {detected_score:.3f}). Outer filament boundaries have completely collapsed."
             action = "EMERGENCY HALT"
             gcode = "M112; M104 S0; M140 S0"
             saved = 52.0
-            thought = f"CRITICAL ANOMALY DETECTED! Bounding box lateral expansion is massive (Score: {detected_score:.3f}). High contour complexity confirmed ({complexity:.1f}). Structure is fully compromised. Closed-loop safety must engage immediately. Issuing emergency G-code M112 shutdown."
+            
+            if "spaghetti" in anomaly_mode.lower():
+                assessment = f"Critical spaghetti failure detected (Detected Score: {detected_score:.3f}). Outer filament boundaries have completely collapsed."
+                thought = f"CRITICAL ANOMALY DETECTED! Bounding box lateral expansion is massive (Score: {detected_score:.3f}). High contour complexity confirmed ({complexity:.1f}). Structure is fully compromised. Closed-loop safety must engage immediately. Issuing emergency G-code M112 shutdown."
+            elif "layer shifting" in anomaly_mode.lower():
+                assessment = f"Critical lateral axis shift detected (Axis Offset: {detected_score*80:.1f} mm)."
+                thought = f"CRITICAL GANTRY ERROR DETECTED! Structural layer alignment shifted. Position encoder discrepancy exceeds tolerance limits. Engaging safety gantry latch."
+            elif "under-extrusion" in anomaly_mode.lower():
+                assessment = f"Critical under-extrusion / nozzle clog detected (Flow drop: {detected_score*100:.1f}%)."
+                thought = f"CRITICAL MATERIAL FLOW ERROR! Nozzle pressure feedback indicates total extrusion failure or severe nozzle clogging. Halting print to prevent cold end damage."
+            else: # Warping
+                assessment = f"Critical bed adhesion collapse / Warping detected (Base tilt: {detected_score*25:.1f}°)."
+                thought = f"CRITICAL ADHESION FAILURE! Base corners lifting. Part detachment imminent. Halting machine to prevent toolhead drag damage."
+                
         elif severity == "WARNING" or thermo_alerts:
             alerts_text = "; ".join(thermo_alerts) if thermo_alerts else "Edge adhesion degrading"
             assessment = f"Thermodynamic boundary instability: {alerts_text}."

@@ -1184,8 +1184,8 @@ with ctrl_col2:
     if st.session_state.camera_thread.mode == "simulator":
         anomaly_mode = st.selectbox(
             "HIL Anomaly Mode",
-            ["Spaghetti Effect", "Layer Shifting", "Warping / Bed Adhesion Collapse"],
-            index=["Spaghetti Effect", "Layer Shifting", "Warping / Bed Adhesion Collapse"].index(st.session_state.vision_gateway.anomaly_mode),
+            ["Spaghetti Effect", "Layer Shifting", "Warping / Bed Adhesion Collapse", "Under-Extrusion / Nozzle Clog"],
+            index=["Spaghetti Effect", "Layer Shifting", "Warping / Bed Adhesion Collapse", "Under-Extrusion / Nozzle Clog"].index(st.session_state.vision_gateway.anomaly_mode),
             key="hil_mode_select"
         )
         if anomaly_mode != st.session_state.vision_gateway.anomaly_mode:
@@ -2008,6 +2008,7 @@ while True:
         warning_thresh=warning_thresh,
         critical_thresh=critical_thresh
     )
+    telemetry["anomaly_mode"] = st.session_state.vision_gateway.anomaly_mode
     
     # ---------------- DYNAMIC THERMODYNAMIC TELEMETRY INJECTION ----------------
     is_sim = st.session_state.camera_thread.mode == "simulator"
