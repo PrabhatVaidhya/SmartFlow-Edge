@@ -1698,12 +1698,17 @@ with chart_col_right:
     
     # Compile CSV from active history state
     import pandas as pd
+    history_df = None
     if "telemetry_history" in st.session_state and len(st.session_state.telemetry_history) > 0:
-        if isinstance(st.session_state.telemetry_history, CircularQueueBuffer):
-            history_df = pd.DataFrame(st.session_state.telemetry_history.to_list())
-        else:
-            history_df = pd.DataFrame(st.session_state.telemetry_history)
-    else:
+        try:
+            if isinstance(st.session_state.telemetry_history, CircularQueueBuffer):
+                history_df = pd.DataFrame(st.session_state.telemetry_history.to_list())
+            else:
+                history_df = pd.DataFrame(st.session_state.telemetry_history)
+        except Exception:
+            history_df = None
+            
+    if history_df is None or history_df.empty:
         history_df = pd.DataFrame([{
             "Timestamp": datetime.now().strftime("%H:%M:%S"),
             "Nozzle Thermal Profile (°C)": 210.0,
@@ -4691,7 +4696,16 @@ while True:
     })
     
     # Update chart placeholder natively using O(1) buffer list conversion
-    hist_df = pd.DataFrame(st.session_state.telemetry_history.to_list())
+    try:
+        hist_df = pd.DataFrame(st.session_state.telemetry_history.to_list())
+    except Exception:
+        hist_df = pd.DataFrame([{
+            "Timestamp": datetime.now().strftime("%H:%M:%S"),
+            "Nozzle Thermal Profile (°C)": float(st.session_state.temperature),
+            "Volumetric Drift Vector (%)": float(deviation),
+            "Volumetric Flow (mm3/s)": float(flow),
+            "Chamber Temperature (°C)": float(chamber_temp)
+        }])
     chart_df = hist_df.set_index("Timestamp")[["Nozzle Thermal Profile (°C)", "Volumetric Drift Vector (%)"]]
     trend_chart_placeholder.line_chart(chart_df, height=180, use_container_width=True)
     
