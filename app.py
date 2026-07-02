@@ -1629,7 +1629,7 @@ with st.expander("🏆 VIEW SYSTEM DEFENSIBILITY & METROLOGICAL PLAYBOOK", expan
         st.markdown(svg_html, unsafe_allow_html=True)
         
     with col_video:
-        st.markdown("<h5 style='font-family:\"Inter\", sans-serif; font-size:0.85rem; color:#ffffff; font-weight:bold; margin-top:8px; margin-bottom:4px;'>\ud83c\udfa5 EDGE-VISION DIAGNOSTIC VIDEO FEED</h5>", unsafe_allow_html=True)
+        st.markdown("<h5 style='font-family:\"Inter\", sans-serif; font-size:0.85rem; color:#ffffff; font-weight:bold; margin-top:8px; margin-bottom:4px;'>🎥 EDGE-VISION DIAGNOSTIC VIDEO FEED</h5>", unsafe_allow_html=True)
         try:
             with open("data/sample_fail.mp4", "rb") as f:
                 video_bytes = f.read()
