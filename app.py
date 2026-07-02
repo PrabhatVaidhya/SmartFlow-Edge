@@ -1550,18 +1550,44 @@ with st.expander("🏆 VIEW SYSTEM DEFENSIBILITY & METROLOGICAL PLAYBOOK", expan
                 val = 190.0 * np.exp(-0.45 * (s - 6)) + 4.2 + np.random.normal(0, 0.8)
                 comp_err.append(max(2.1, val))
                 
-        import pandas as pd
-        df_error = pd.DataFrame({
-            "Control Cycle": steps,
-            "Baseline Tracking Error (No-Comp, µm)": baseline_err,
-            "SmartFlow Closed-Loop Error (Compensated, µm)": comp_err
-        }).set_index("Control Cycle")
+        import matplotlib.pyplot as plt
+        import io
         
-        st.line_chart(df_error, height=240)
+        fig, ax = plt.subplots(figsize=(6, 3.8), facecolor='#13131a')
+        ax.set_facecolor('#13131a')
+        ax.plot(steps, baseline_err, label="Baseline Tracking Error (No-Comp)", color="#ef4444", linewidth=1.5)
+        ax.plot(steps, comp_err, label="SmartFlow Closed-Loop (Compensated)", color="#10b981", linewidth=2)
+        ax.set_xlabel("Control Cycle", color="#8b8fa8", fontsize=8)
+        ax.set_ylabel("Error (\u00b5m)", color="#8b8fa8", fontsize=8)
+        ax.tick_params(colors='#8b8fa8', labelsize=7)
+        ax.grid(True, color="#1f1f30", linestyle="--", linewidth=0.5)
+        
+        # Legend with matching colors
+        leg = ax.legend(facecolor='#13131a', edgecolor='#1f1f30', fontsize=7)
+        for text in leg.get_texts():
+            text.set_color('#e8eaf0')
+            
+        # Remove top/right spines
+        for spine in ['top', 'right']:
+            ax.spines[spine].set_visible(False)
+        ax.spines['left'].set_color('#1f1f30')
+        ax.spines['bottom'].set_color('#1f1f30')
+        
+        # Save to buffer and display via st.image
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", dpi=150)
+        buf.seek(0)
+        st.image(buf, use_container_width=True)
+        plt.close(fig)
         
     with col_video:
-        st.markdown("<h5 style='font-family:\"Inter\", sans-serif; font-size:0.85rem; color:#ffffff; font-weight:bold; margin-top:8px; margin-bottom:4px;'>🎥 EDGE-VISION DIAGNOSTIC VIDEO FEED</h5>", unsafe_allow_html=True)
-        st.video("data/sample_fail.mp4")
+        st.markdown("<h5 style='font-family:\"Inter\", sans-serif; font-size:0.85rem; color:#ffffff; font-weight:bold; margin-top:8px; margin-bottom:4px;'>\ud83c\udfa5 EDGE-VISION DIAGNOSTIC VIDEO FEED</h5>", unsafe_allow_html=True)
+        try:
+            with open("data/sample_fail.mp4", "rb") as f:
+                video_bytes = f.read()
+            st.video(video_bytes)
+        except Exception as e:
+            st.error(f"Failed to load video: {str(e)}")
         
     playbook_part2_placeholder = st.empty()
     roadmap_placeholder = st.empty()
