@@ -380,8 +380,23 @@ class VisionGateway:
                     else:
                         prob = 1.0 if pred == 1 else 0.0
                         
-                    self.ml_prediction = "DEFECT" if pred == 1 else "NOMINAL"
+                    is_defect = (pred == 1) or (deviation_pct >= self.warning_threshold)
                     self.ml_probability = prob
+                    
+                    if is_defect:
+                        if self.sim_layer > 0:
+                            self.ml_prediction = f"DEFECT: {self.anomaly_mode.upper()}"
+                        else:
+                            if complexity_score > 35.0:
+                                self.ml_prediction = "DEFECT: SPAGHETTI EFFECT"
+                            elif deviation_pct > 40.0 and complexity_score < 20.0:
+                                self.ml_prediction = "DEFECT: LAYER SHIFTING"
+                            elif deviation_pct > 15.0 and complexity_score < 15.0:
+                                self.ml_prediction = "DEFECT: WARPING / Bed Adhesion Collapse"
+                            else:
+                                self.ml_prediction = "DEFECT: UNDER-EXTRUSION / Nozzle Clog"
+                    else:
+                        self.ml_prediction = "NOMINAL"
                     
                     # Hybrid Safety System: if ML model predicts defect, ensure at least WARNING level is raised
                     if pred == 1 and deviation_pct < self.warning_threshold:
@@ -390,8 +405,22 @@ class VisionGateway:
                     self.ml_prediction = "INFERENCE ERR"
                     self.ml_probability = 0.0
             else:
-                self.ml_prediction = "HEURISTIC"
-                self.ml_probability = 1.0 if (deviation_pct >= self.warning_threshold) else 0.0
+                is_defect = (deviation_pct >= self.warning_threshold)
+                if is_defect:
+                    if self.sim_layer > 0:
+                        self.ml_prediction = f"DEFECT: {self.anomaly_mode.upper()}"
+                    else:
+                        if complexity_score > 35.0:
+                            self.ml_prediction = "DEFECT: SPAGHETTI EFFECT"
+                        elif deviation_pct > 40.0 and complexity_score < 20.0:
+                            self.ml_prediction = "DEFECT: LAYER SHIFTING"
+                        elif deviation_pct > 15.0 and complexity_score < 15.0:
+                            self.ml_prediction = "DEFECT: WARPING / Bed Adhesion Collapse"
+                        else:
+                            self.ml_prediction = "DEFECT: UNDER-EXTRUSION / Nozzle Clog"
+                else:
+                    self.ml_prediction = "NOMINAL"
+                self.ml_probability = 1.0 if is_defect else 0.0
             # ------------------------------------------
 
             if deviation_pct >= self.critical_threshold:
